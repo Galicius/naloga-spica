@@ -14,10 +14,29 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should render application title', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, naloga-spica');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Naloga Špica');
+  });
+
+  it('should render user search and sort controls', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('input[type="search"]')).toBeTruthy();
+    expect(compiled.querySelector('select')).toBeTruthy();
+  });
+
+  it('should open settings popup', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toContain(
+      'Nastavitve prijave',
+    );
   });
 });
