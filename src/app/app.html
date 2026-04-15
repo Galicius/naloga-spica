@@ -6,33 +6,66 @@
 <main>
   <section class="toolbar" aria-label="Orodja za uporabnike">
     <label>
-      Poišči uporabnike
-      <input type="search" placeholder="Ime ali priimek" />
+      Poisci uporabnike
+      <input type="search" placeholder="Ime ali priimek" [(ngModel)]="search" />
     </label>
+
+    <button type="button" (click)="loadUsers()" [disabled]="loading">
+      {{ loading ? 'Nalagam ...' : 'Nalozi uporabnike' }}
+    </button>
   </section>
+
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
 
   <section>
     <h2>Uporabniki</h2>
-    <p>Seznam uporabnikov</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Ime</th>
+          <th>Priimek</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers; track user.Id) {
+          <tr>
+            <td>{{ user.FirstName || '-' }}</td>
+            <td>{{ user.LastName || '-' }}</td>
+            <td>{{ user.Email || '-' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3">Ni uporabnikov za prikaz.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
   </section>
 </main>
 
 @if (settingsOpen) {
   <div class="backdrop">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <h2 id="settings-title">Auth</h2>
+      <h2 id="settings-title">Nastavitve prijave</h2>
 
       <label>
         CLIENT_ID
-        <input type="password" />
+        <input type="text" [(ngModel)]="clientId" />
       </label>
 
       <label>
         CLIENT_SECRET
-        <input type="password" />
+        <input type="password" [(ngModel)]="clientSecret" />
       </label>
 
-      <button type="button" (click)="closeSettings()">Shrani</button>
+      <div class="modal-actions">
+        <button type="button" (click)="closeSettings()">Preklici</button>
+        <button type="button" (click)="saveSettings()">Shrani</button>
+      </div>
     </section>
   </div>
 }

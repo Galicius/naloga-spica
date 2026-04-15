@@ -1,0 +1,12 @@
+{
+  "/connect": {
+    "target": "https://login.spica.com",
+    "secure": true,
+    "changeOrigin": true
+  },
+  "/api": {
+    "target": "https://api4.allhours.com",
+    "secure": true,
+    "changeOrigin": true
+  }
+}
