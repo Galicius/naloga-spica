@@ -47,6 +47,30 @@ describe('App', () => {
     expect(dialog.querySelector('input[type="password"]')).toBeTruthy();
   });
 
+  it('should expand add user form from the toolbar button', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const addUserButton = Array.from(compiled.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Dodaj zaposlenega'),
+    ) as HTMLButtonElement;
+
+    expect(addUserButton).toBeTruthy();
+    expect(addUserButton.getAttribute('aria-expanded')).toBe('false');
+    expect(compiled.querySelector('#add-user-form')).toBeFalsy();
+
+    addUserButton.click();
+    fixture.detectChanges();
+
+    const addUserForm = compiled.querySelector('#add-user-form') as HTMLElement;
+    expect(addUserButton.getAttribute('aria-expanded')).toBe('true');
+    expect(addUserForm).toBeTruthy();
+    expect(addUserForm.querySelector('input[name="firstName"]')).toBeTruthy();
+    expect(addUserForm.querySelector('input[name="lastName"]')).toBeTruthy();
+    expect(addUserForm.querySelector('input[name="email"]')).toBeTruthy();
+  });
+
   it('should filter users by name or email', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;

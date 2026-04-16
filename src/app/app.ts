@@ -66,6 +66,7 @@ export class App implements OnInit {
   absences: Absence[] = [];
   absenceDefinitions: AbsenceDefinition[] = [];
   viewMode: ViewMode = 'users';
+  addUserOpen = false;
   selectedDateTime = this.toDateTimeInputValue(new Date());
   absenceModalOpen = false;
   selectedAbsenceUser: User | null = null;
@@ -187,6 +188,8 @@ export class App implements OnInit {
       return;
     }
 
+    this.addUserOpen = false;
+
     if (!this.users.length) {
       await this.loadUsers();
     }
@@ -243,6 +246,10 @@ export class App implements OnInit {
       this.loadingAbsences = false;
       this.changeDetector.detectChanges();
     }
+  }
+
+  toggleAddUser(): void {
+    this.addUserOpen = !this.addUserOpen;
   }
 
   async addUser(form: NgForm): Promise<void> {
