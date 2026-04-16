@@ -31,9 +31,28 @@ input {
   margin-bottom: 1.5rem;
 }
 
+.add-user {
+  margin-bottom: 1.5rem;
+}
+
+.add-user form {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
 label {
   display: grid;
   gap: 0.25rem;
+}
+
+.error {
+  color: #b00020;
+}
+
+.success {
+  color: #146c2e;
 }
 
 table {

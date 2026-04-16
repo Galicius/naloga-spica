@@ -19,6 +19,35 @@
     <p class="error">{{ error }}</p>
   }
 
+  @if (message) {
+    <p class="success">{{ message }}</p>
+  }
+
+  <section class="add-user" aria-labelledby="add-user-title">
+    <h2 id="add-user-title">Dodaj zaposlenega</h2>
+
+    <form #addUserForm="ngForm" (ngSubmit)="addUser(addUserForm)">
+      <label>
+        Ime
+        <input type="text" name="firstName" [(ngModel)]="newUser.firstName" required />
+      </label>
+
+      <label>
+        Priimek
+        <input type="text" name="lastName" [(ngModel)]="newUser.lastName" required />
+      </label>
+
+      <label>
+        Mail
+        <input type="email" name="email" [(ngModel)]="newUser.email" required email />
+      </label>
+
+      <button type="submit" [disabled]="adding || addUserForm.invalid">
+        {{ adding ? 'Dodajam ...' : 'Dodaj' }}
+      </button>
+    </form>
+  </section>
+
   <section>
     <h2>Uporabniki</h2>
 

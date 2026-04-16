@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 interface TokenResponse {
@@ -13,6 +13,12 @@ interface User {
   LastName?: string;
   FullName?: string;
   Email?: string;
+}
+
+interface NewUser {
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 @Component({
@@ -28,8 +34,15 @@ export class App implements OnInit {
   clientSecret = '';
   search = '';
   users: User[] = [];
+  newUser: NewUser = {
+    firstName: '',
+    lastName: '',
+    email: '',
+  };
   loading = false;
+  adding = false;
   error = '';
+  message = '';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -67,6 +80,7 @@ export class App implements OnInit {
   async loadUsers(): Promise<void> {
     this.loading = true;
     this.error = '';
+    this.message = '';
 
     try {
       this.saveSettings();
@@ -85,6 +99,65 @@ export class App implements OnInit {
     }
   }
 
+  async addUser(form: NgForm): Promise<void> {
+    this.error = '';
+    this.message = '';
+
+    const firstName = this.newUser.firstName.trim();
+    const lastName = this.newUser.lastName.trim();
+    const email = this.newUser.email.trim();
+
+    if (!firstName || !lastName || !email) {
+      this.error = 'Name, surname and mail are required.';
+      return;
+    }
+
+    if (form.invalid || !this.isValidEmail(email)) {
+      this.error = 'Mail must be in a valid email format.';
+      return;
+    }
+
+    this.adding = true;
+
+    try {
+      this.saveSettings();
+      const token = await this.getToken();
+      const createdUser = await firstValueFrom(
+        this.http.post<User | null>(
+          '/api/v1/Users',
+          {
+            FirstName: firstName,
+            LastName: lastName,
+            Email: email,
+          },
+          {
+            headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+          },
+        ),
+      );
+
+      this.users = [
+        ...this.users,
+        createdUser || {
+          Id: email,
+          FirstName: firstName,
+          LastName: lastName,
+          Email: email,
+        },
+      ];
+      form.resetForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+      });
+      this.message = 'Employee was added.';
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'Employee could not be added.';
+    } finally {
+      this.adding = false;
+    }
+  }
+
   private async getToken(): Promise<string> {
     const body = new HttpParams()
       .set('grant_type', 'client_credentials')
@@ -99,5 +172,9 @@ export class App implements OnInit {
     );
 
     return response.access_token;
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }
