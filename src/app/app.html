@@ -5,75 +5,139 @@
 
 <main>
   <section class="toolbar" aria-label="Orodja za uporabnike">
+    <div class="view-toggle" aria-label="Preklop prikaza">
+      <button type="button" [class.is-active]="viewMode === 'users'" (click)="setViewMode('users')">Uporabniki</button>
+      <button type="button" [class.is-active]="viewMode === 'absences'" (click)="setViewMode('absences')">Odsotnosti</button>
+    </div>
+
     <label>
-      Poisci uporabnike
-      <input type="search" placeholder="Ime ali priimek" [(ngModel)]="search" />
+      {{ viewMode === 'users' ? 'Poišči uporabnike' : 'Poišči odsotnosti' }}
+      <input
+        type="search"
+        [placeholder]="viewMode === 'users' ? 'Ime ali priimek' : 'Zaposleni ali vrsta'"
+        [(ngModel)]="search"
+      />
     </label>
 
-    <button type="button" (click)="loadUsers()" [disabled]="loading">
-      {{ loading ? 'Nalagam ...' : 'Nalozi uporabnike' }}
-    </button>
+    @if (viewMode === 'absences') {
+      <label>
+        Čas preverjanja
+        <input type="datetime-local" [(ngModel)]="selectedDateTime" />
+      </label>
+
+      <button type="button" (click)="loadAbsences()" [disabled]="loadingAbsences">
+        {{ loadingAbsences ? 'Osvežujem ...' : 'Osveži odsotnosti' }}
+      </button>
+    }
   </section>
 
   @if (error) {
     <p class="error">{{ error }}</p>
   }
 
+  @if (loading) {
+    <p class="success">Nalagam uporabnike ...</p>
+  }
+
+  @if (loadingDefinitions) {
+    <p class="success">Nalagam vrste odsotnosti ...</p>
+  }
+
   @if (message) {
     <p class="success">{{ message }}</p>
   }
 
-  <section class="add-user" aria-labelledby="add-user-title">
-    <h2 id="add-user-title">Dodaj zaposlenega</h2>
+  @if (viewMode === 'users') {
+    <section class="add-user" aria-labelledby="add-user-title">
+      <h2 id="add-user-title">Dodaj zaposlenega</h2>
 
-    <form #addUserForm="ngForm" (ngSubmit)="addUser(addUserForm)">
-      <label>
-        Ime
-        <input type="text" name="firstName" [(ngModel)]="newUser.firstName" required />
-      </label>
+      <form #addUserForm="ngForm" (ngSubmit)="addUser(addUserForm)">
+        <label>
+          Ime
+          <input type="text" name="firstName" [(ngModel)]="newUser.firstName" required />
+        </label>
 
-      <label>
-        Priimek
-        <input type="text" name="lastName" [(ngModel)]="newUser.lastName" required />
-      </label>
+        <label>
+          Priimek
+          <input type="text" name="lastName" [(ngModel)]="newUser.lastName" required />
+        </label>
 
-      <label>
-        Mail
-        <input type="email" name="email" [(ngModel)]="newUser.email" required email />
-      </label>
+        <label>
+          E-pošta
+          <input type="email" name="email" [(ngModel)]="newUser.email" required email />
+        </label>
 
-      <button type="submit" [disabled]="adding || addUserForm.invalid">
-        {{ adding ? 'Dodajam ...' : 'Dodaj' }}
-      </button>
-    </form>
-  </section>
+        <button type="submit" [disabled]="adding || addUserForm.invalid">
+          {{ adding ? 'Dodajam ...' : 'Dodaj' }}
+        </button>
+      </form>
+    </section>
 
-  <section>
-    <h2>Uporabniki</h2>
+    <section>
+      <h2>Uporabniki</h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Ime</th>
-          <th>Priimek</th>
-          <th>Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (user of filteredUsers; track user.Id) {
+      <table>
+        <thead>
           <tr>
-            <td>{{ user.FirstName || '-' }}</td>
-            <td>{{ user.LastName || '-' }}</td>
-            <td>{{ user.Email || '-' }}</td>
+            <th>Ime</th>
+            <th>Priimek</th>
+            <th>E-pošta</th>
+            <th>Odsotnost</th>
           </tr>
-        } @empty {
+        </thead>
+        <tbody>
+          @for (user of filteredUsers; track user.Id) {
+            <tr>
+              <td>{{ user.FirstName || '-' }}</td>
+              <td>{{ user.LastName || '-' }}</td>
+              <td>{{ user.Email || '-' }}</td>
+              <td>
+                <button type="button" class="table-action" (click)="openAbsenceDialog(user)">Dodaj odsotnost</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">Ni uporabnikov za prikaz.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <section class="absence-panel" aria-labelledby="absence-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="absence-title">Odsotni ob {{ selectedMomentLabel }}</h2>
+          <p>{{ filteredAbsencesAtSelectedTime.length }} zaposlenih ima v tem času vpisano odsotnost.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
           <tr>
-            <td colspan="3">Ni uporabnikov za prikaz.</td>
+            <th>Zaposleni</th>
+            <th>Vrsta</th>
+            <th>Čas</th>
+            <th>Komentar</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody>
+          @for (absence of filteredAbsencesAtSelectedTime; track absence.Id) {
+            <tr>
+              <td>{{ absenceUserName(absence) }}</td>
+              <td>{{ absenceDefinitionName(absence) }}</td>
+              <td>{{ absencePeriodLabel(absence) }}</td>
+              <td>{{ absence.Comment || '-' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">Za izbrani čas ni odsotnosti.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
 </main>
 
 @if (settingsOpen) {
@@ -92,9 +156,51 @@
       </label>
 
       <div class="modal-actions">
-        <button type="button" (click)="closeSettings()">Preklici</button>
+        <button type="button" (click)="closeSettings()">Prekliči</button>
         <button type="button" (click)="saveSettings()">Shrani</button>
       </div>
+    </section>
+  </div>
+}
+
+@if (absenceModalOpen && selectedAbsenceUser) {
+  <div class="backdrop">
+    <section class="modal absence-modal" role="dialog" aria-modal="true" aria-labelledby="absence-modal-title">
+      <h2 id="absence-modal-title">Odsotnost za {{ userDisplayName(selectedAbsenceUser) }}</h2>
+
+      <form #absenceForm="ngForm" (ngSubmit)="saveAbsence(absenceForm)">
+        <label>
+          Vrsta odsotnosti
+          <select name="absenceDefinitionId" [(ngModel)]="newAbsence.absenceDefinitionId" required>
+            <option value="">Izberi vrsto</option>
+            @for (definition of activeAbsenceDefinitions; track definition.Id) {
+              <option [value]="definition.Id">{{ definition.Name }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Začetek
+          <input type="datetime-local" name="absenceStart" [(ngModel)]="newAbsence.start" required />
+        </label>
+
+        <label>
+          Konec
+          <input type="datetime-local" name="absenceEnd" [(ngModel)]="newAbsence.end" required />
+        </label>
+
+        <label>
+          Komentar
+          <textarea name="absenceComment" rows="3" [(ngModel)]="newAbsence.comment"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeAbsenceDialog()">Prekliči</button>
+          <button type="submit" [disabled]="savingAbsence || absenceForm.invalid">
+            {{ savingAbsence ? 'Shranjujem ...' : 'Shrani odsotnost' }}
+          </button>
+        </div>
+      </form>
     </section>
   </div>
 }

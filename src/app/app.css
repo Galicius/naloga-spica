@@ -40,6 +40,16 @@ input {
   gap: 1rem;
   align-items: end;
   flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-toggle .is-active {
+  font-weight: 700;
 }
 
 label {
